@@ -74,31 +74,18 @@
             background-color: #9e9e9e;
         }
 
-        .waiting-btn {
-            background-color: #ff9800;
-        }
-
         .selected-btn {
             background-color: #4caf50;
+        }
+
+        .mandatory-btn {
+            background-color: #ff9800;
         }
 
         .slider-container {
             margin-top: 20px;
             text-align: center;
             font-family: 'Press Start 2P', cursive;
-        }
-
-        .slider {
-            width: 200px;
-            margin: 10px 0;
-            background-color: #555555;
-            border-radius: 5px;
-        }
-
-        .slider-value {
-            margin: 5px 0;
-            font-size: 1rem;
-            color: #ff003c;
         }
 
         .button-container {
@@ -159,14 +146,6 @@
 
     <div class="player-container" id="player-list"></div>
 
-    <div class="slider-container">
-        <div class="slider-value">Played Probability: <span id="played-prob-value">50</span>%</div>
-        <input type="range" id="played-prob-slider" class="slider" min="0" max="100" value="50">
-        
-        <div class="slider-value">Waiting Probability: <span id="waiting-prob-value">70</span>%</div>
-        <input type="range" id="waiting-prob-slider" class="slider" min="0" max="100" value="70">
-    </div>
-
     <div class="button-container">
         <button id="select-players" class="btn">Select Players</button>
         <button id="add-player" class="btn">Add New Player</button>
@@ -186,9 +165,6 @@
 
     <script>
         const allPlayers = ['``Ve[N]oM`', 'negan', 'Hello', 'saitama', 'Jroot', 'Shifty', 'Gamer', 'Turbo'];
-        let playedProbability = 0.50;
-        let waitingProbability = 0.70;
-
         const playerStatus = {}; // Object to store each player's status
 
         const playerListDiv = document.getElementById('player-list');
@@ -218,83 +194,56 @@
             const currentStatus = statusDiv.textContent;
 
             if (currentStatus === 'Unselected') {
-                statusDiv.textContent = 'Played';
+                statusDiv.textContent = 'Selected';
                 playerDiv.classList.add('selected-btn');
-                playerDiv.classList.remove('unselected-btn', 'waiting-btn');
-                playerStatus[player] = 'Played';
-            } else if (currentStatus === 'Played') {
-                statusDiv.textContent = 'Waiting';
-                playerDiv.classList.add('waiting-btn');
+                playerDiv.classList.remove('unselected-btn', 'mandatory-btn');
+                playerStatus[player] = 'Selected';
+            } else if (currentStatus === 'Selected') {
+                statusDiv.textContent = 'Mandatory';
+                playerDiv.classList.add('mandatory-btn');
                 playerDiv.classList.remove('selected-btn', 'unselected-btn');
-                playerStatus[player] = 'Waiting';
+                playerStatus[player] = 'Mandatory';
             } else {
                 statusDiv.textContent = 'Unselected';
                 playerDiv.classList.add('unselected-btn');
-                playerDiv.classList.remove('selected-btn', 'waiting-btn');
+                playerDiv.classList.remove('selected-btn', 'mandatory-btn');
                 playerStatus[player] = 'Unselected';
             }
         }
 
-        // Update probability values from sliders
-        document.getElementById('played-prob-slider').addEventListener('input', (event) => {
-            playedProbability = event.target.value / 100;
-            document.getElementById('played-prob-value').textContent = event.target.value;
-        });
-
-        document.getElementById('waiting-prob-slider').addEventListener('input', (event) => {
-            waitingProbability = event.target.value / 100;
-            document.getElementById('waiting-prob-value').textContent = event.target.value;
-        });
-
         document.getElementById('select-players').addEventListener('click', async () => {
-            const played = [];
-            const waiting = [];
+            const selected = [];
+            const mandatory = [];
 
             for (let player in playerStatus) {
-                if (playerStatus[player] === 'Played') played.push(player);
-                else if (playerStatus[player] === 'Waiting') waiting.push(player);
+                if (playerStatus[player] === 'Selected') selected.push(player);
+                else if (playerStatus[player] === 'Mandatory') mandatory.push(player);
             }
 
-            // If fewer than 5 players are selected, show an error
-            if (played.length + waiting.length < 5) {
+            // Ensure we have at least 5 players with mandatory ones included
+            if (mandatory.length + selected.length < 5) {
                 showModal('Error: You must select at least 5 players.');
                 return; // Exit without running the selection algorithm
             }
 
-            // Shuffle the players before applying probabilities
-            shuffleArray(played);
-            shuffleArray(waiting);
+            // Randomly select players from the selected pool
+            const selectedPool = selected.slice();
+            const randomizedSelection = randomizePlayers(selectedPool, 5 - mandatory.length);
 
-            // Randomly select players based on probabilities
-            const playedSelection = await randomizePlayers(played, playedProbability);
-            const waitingSelection = await randomizePlayers(waiting, waitingProbability);
+            let finalSelection = [...mandatory, ...randomizedSelection];
 
-            let selectedPlayers = [...playedSelection, ...waitingSelection];
+            finalSelection = finalSelection.slice(0, 5); // Ensure only 5 players are selected
 
-            // Ensure we have exactly 5 players
-            while (selectedPlayers.length < 5) {
-                if (playedSelection.length < 5) {
-                    const remainingPlayed = played.filter(p => !selectedPlayers.includes(p));
-                    selectedPlayers.push(...remainingPlayed.slice(0, 5 - selectedPlayers.length));
-                } else {
-                    const remainingWaiting = waiting.filter(p => !selectedPlayers.includes(p));
-                    selectedPlayers.push(...remainingWaiting.slice(0, 5 - selectedPlayers.length));
-                }
-            }
+            finalSelection = finalSelection.sort(() => Math.random() - 0.5); // Shuffle the array
 
-            selectedPlayers = selectedPlayers.slice(0, 5); // Ensure only 5 players are selected
-
-            selectedPlayers = selectedPlayers.sort(() => Math.random() - 0.5); // Shuffle the array
-
-            showModal(selectedPlayers);
+            showModal(finalSelection);
         });
 
-        async function randomizePlayers(players, probability) {
+        function randomizePlayers(players, numPlayers) {
             const selectedPlayers = [];
-            for (const player of players) {
-                if (Math.random() < probability) {
-                    selectedPlayers.push(player);
-                }
+            shuffleArray(players);
+            for (let i = 0; i < numPlayers; i++) {
+                selectedPlayers.push(players[i]);
             }
             return selectedPlayers;
         }
@@ -306,19 +255,19 @@
             }
         }
 
-        function showModal(messageOrPlayers) {
+        function showModal(players) {
             const modal = document.getElementById('modal');
             const modalContent = document.getElementById('modal-content');
             modalContent.innerHTML = '';
 
-            if (typeof messageOrPlayers === 'string') {
-                modalContent.innerHTML = `<p>${messageOrPlayers}</p>`;
-            } else {
-                messageOrPlayers.forEach(player => {
+            if (Array.isArray(players)) {
+                players.forEach(player => {
                     const playerDiv = document.createElement('div');
                     playerDiv.textContent = player;
                     modalContent.appendChild(playerDiv);
                 });
+            } else {
+                modalContent.innerHTML = `<p>${players}</p>`;
             }
 
             modal.style.display = 'block';
@@ -372,7 +321,6 @@
                 });
             }
         }
-
     </script>
 
 </body>
