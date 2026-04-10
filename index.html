@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prakhar Gupta — Senior SDET</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #21262d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --tag-bg: #1f3a5f;
+      --tag-text: #79c0ff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(13, 17, 23, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 6rem 2rem 4rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-content { max-width: 680px; }
+
+    .hero-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent2);
+      margin-bottom: 1.2rem;
+      letter-spacing: 0.05em;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 span { color: var(--accent); }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      margin-bottom: 1.6rem;
+      font-weight: 400;
+    }
+
+    .hero-summary {
+      font-size: 1rem;
+      color: #c9d1d9;
+      line-height: 1.75;
+      margin-bottom: 2rem;
+      max-width: 600px;
+    }
+
+    .hero-links {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0d1117;
+    }
+
+    .btn-primary:hover { background: #79c0ff; }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* SECTIONS */
+    section {
+      padding: 5rem 2rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .section-header h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .section-line {
+      height: 1px;
+      background: var(--border);
+      flex: 1;
+    }
+
+    /* SKILLS */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .skill-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: border-color 0.2s;
+    }
+
+    .skill-card:hover { border-color: var(--accent); }
+
+    .skill-card h3 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .tag {
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+    }
+
+    .tag.green {
+      background: #1a3a2a;
+      color: #56d364;
+    }
+
+    .tag.purple {
+      background: #2d1f4a;
+      color: #bc8cff;
+    }
+
+    /* EXPERIENCE */
+    .timeline { position: relative; }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 8px;
+      bottom: 0;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .timeline-item {
+      padding-left: 2.5rem;
+      position: relative;
+      margin-bottom: 3rem;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .timeline-item:last-child { margin-bottom: 0; }
+
+    .timeline-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.4rem;
+    }
+
+    .timeline-role {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .timeline-company {
+      color: var(--accent);
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .timeline-date {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-left: auto;
+    }
+
+    .timeline-bullets {
+      margin-top: 0.75rem;
+      padding-left: 1.2rem;
+      color: #c9d1d9;
+      font-size: 0.9rem;
+    }
+
+    .timeline-bullets li {
+      margin-bottom: 0.45rem;
+      line-height: 1.6;
+    }
+
+    .timeline-bullets li strong { color: var(--text); }
+
+    /* PROJECTS */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .project-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .project-card h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .project-card h3 .icon {
+      font-size: 1rem;
+    }
+
+    .project-card p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    /* EDUCATION */
+    .edu-list { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    .edu-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .edu-card h3 { font-size: 0.95rem; font-weight: 600; }
+    .edu-card p { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .edu-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .edu-meta .date {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .edu-meta .grade {
+      font-size: 0.8rem;
+      color: var(--accent2);
+      font-weight: 500;
+      margin-top: 0.25rem;
+    }
+
+    /* CONTACT */
+    .contact-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .contact-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .contact-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .contact-link svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* FADE IN */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 600px) {
+      .nav-links { display: none; }
+      .timeline-date { margin-left: 0; }
+      .edu-meta { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="nav-logo" href="#">pg@portfolio:~$</a>
+    <ul class="nav-links">
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-content fade-in">
+      <span class="hero-tag">// Senior SDET · 7+ Years</span>
+      <h1>Prakhar<br /><span>Gupta</span></h1>
+      <p class="hero-subtitle">Software Development Engineer in Test</p>
+      <p class="hero-summary">
+        I build automation frameworks that scale. With 7+ years across frontend (Web &amp; Mobile)
+        and backend systems, I specialise in designing cost-effective, reliable test infrastructure
+        that ships quality at speed.
+      </p>
+      <div class="hero-links">
+        <a class="btn btn-primary" href="#contact">Get in touch</a>
+        <a class="btn btn-outline" href="#experience">View experience</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="section-header fade-in">
+      <h2>Skills</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="skills-grid fade-in">
+      <div class="skill-card">
+        <h3>Languages</h3>
+        <div class="tags">
+          <span class="tag">Python</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag">JavaScript</span>
+        </div>
+      </div>
+      <div class="skill-card">
+        <h3>Automation Frameworks</h3>
+        <div class="tags">
+          <span class="tag">Playwright</span>
+          <span class="tag">WebDriverIO</span>
+          <span class="tag">Appium</span>
+          <span class="tag">Cypress</span>
+          <span class="tag">Behave</span>
+          <span class="tag">Gauge</span>
+          <span class="tag">JMeter</span>
+        </div>
+      </div>
+      <div class="skill-card">
+        <h3>Cloud &amp; DevOps</h3>
+        <div class="tags">
+          <span class="tag green">AWS</span>
+          <span class="tag green">Docker</span>
+          <span class="tag green">Kubernetes</span>
+          <span class="tag green">GitHub Actions</span>
+          <span class="tag green">GitLabCI</span>
+          <span class="tag green">BitBucket</span>
+        </div>
+      </div>
+      <div class="skill-card">
+        <h3>Testing Scope</h3>
+        <div class="tags">
+          <span class="tag purple">API / Backend</span>
+          <span class="tag purple">Web Frontend</span>
+          <span class="tag purple">iOS &amp; Android</span>
+          <span class="tag purple">Integration</span>
+          <span class="tag purple">Performance</span>
+          <span class="tag purple">Contract</span>
+        </div>
+      </div>
+      <div class="skill-card">
+        <h3>Databases &amp; Tooling</h3>
+        <div class="tags">
+          <span class="tag">PostgreSQL</span>
+          <span class="tag">Redis</span>
+          <span class="tag">ElasticSearch</span>
+          <span class="tag">Kafka</span>
+          <span class="tag">RabbitMQ</span>
+          <span class="tag">JIRA</span>
+          <span class="tag">TestRail</span>
+          <span class="tag">QASE.io</span>
+        </div>
+      </div>
+      <div class="skill-card">
+        <h3>AI Tools</h3>
+        <div class="tags">
+          <span class="tag">GitHub Copilot</span>
+          <span class="tag">Cursor</span>
+          <span class="tag">Tabnine</span>
+          <span class="tag">ChatGPT</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience">
+    <div class="section-header fade-in">
+      <h2>Experience</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="timeline fade-in">
+
+      <div class="timeline-item">
+        <div class="timeline-meta">
+          <span class="timeline-role">SDET-3</span>
+          <span>·</span>
+          <span class="timeline-company">Sortly Inc</span>
+          <span class="timeline-date">Aug 2023 – Present</span>
+        </div>
+        <ul class="timeline-bullets">
+          <li><strong>Lead automation engineer</strong> for the Playwright + TypeScript web framework, driving test coverage for critical product features.</li>
+          <li><strong>Owned mobile automation</strong> (Appium + WebDriverIO); migrated from local emulators to LambdaTest cloud, boosting scalability.</li>
+          <li><strong>Architected work-qa-sdk</strong>, a centralised TypeScript SDK unifying API clients, DTOs, and test utilities across web and mobile suites.</li>
+          <li><strong>Cut infrastructure costs ~60%</strong> by migrating Playwright execution from Bitbucket pipelines to AWS EC2.</li>
+          <li>Automated app lifecycle management via <strong>Amazon S3</strong> pipelines for LambdaTest and local emulators.</li>
+          <li>Refactored mobile test architecture with detailed logging, screenshot/video capture, and streamlined emulator scripts.</li>
+        </ul>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-meta">
+          <span class="timeline-role">SDET</span>
+          <span>·</span>
+          <span class="timeline-company">MindTickle Inc</span>
+          <span class="timeline-date">Jan 2018 – Aug 2023</span>
+        </div>
+        <ul class="timeline-bullets">
+          <li>Built <strong>multiple test frameworks from scratch</strong> covering API, frontend, mobile, integration, load, and contract testing.</li>
+          <li>Reduced API test cycle from <strong>5 hours to 20 minutes</strong> via multi-threading and Redis-based tenant isolation.</li>
+          <li>Developed a <strong>BDD integration framework</strong> using Behave covering 60+ microservices with RabbitMQ and Kafka.</li>
+          <li>Conducted <strong>load testing for 30k concurrent users</strong>, deploying JMeter across multiple EC2 instances.</li>
+          <li>Set up GitLabCI pipelines, authored Dockerfiles, mentored junior engineers, and conducted code reviews.</li>
+          <li>Hands-on with RDBMS, ElasticSearch, RedShift, AWS, Kibana, and Kubernetes.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="section-header fade-in">
+      <h2>Projects</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="projects-grid fade-in">
+
+      <div class="project-card">
+        <h3><span class="icon">📦</span> Automation QA SDK</h3>
+        <p>Centralised TypeScript SDK with typed API clients, DTOs, Faker-based test data, and ReportPortal integration. Ships via GitHub Actions with semantic versioning.</p>
+        <div class="tags">
+          <span class="tag">TypeScript</span>
+          <span class="tag">GitHub Actions</span>
+          <span class="tag">ReportPortal</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <h3><span class="icon">🌐</span> Playwright Web Automation</h3>
+        <p>Full-coverage Playwright framework for web; integrated SDK modules, migrated CI to AWS EC2 cutting monthly costs by ~60%.</p>
+        <div class="tags">
+          <span class="tag">Playwright</span>
+          <span class="tag">TypeScript</span>
+          <span class="tag green">AWS EC2</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <h3><span class="icon">📱</span> Mobile Automation (Appium)</h3>
+        <p>Native iOS &amp; Android test suite with LambdaTest cloud execution, S3-based app version management, and enhanced logging/media capture.</p>
+        <div class="tags">
+          <span class="tag">Appium</span>
+          <span class="tag">WebDriverIO</span>
+          <span class="tag green">LambdaTest</span>
+          <span class="tag green">S3</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <h3><span class="icon">⚡</span> API Automation (Gauge)</h3>
+        <p>Multi-threaded API framework with Redis tenant isolation. Slashed test cycle from 5 hours to 20 minutes. Grafana + InfluxDB monitoring for early bug detection.</p>
+        <div class="tags">
+          <span class="tag">Gauge</span>
+          <span class="tag">Python</span>
+          <span class="tag">Redis</span>
+          <span class="tag purple">Grafana</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <h3><span class="icon">🔥</span> Load Testing (JMeter)</h3>
+        <p>Distributed JMeter load test across EC2 instances for a 30k-user event. Delivered p95/p99 latency analysis and ensured API availability under peak load.</p>
+        <div class="tags">
+          <span class="tag">JMeter</span>
+          <span class="tag green">AWS EC2</span>
+          <span class="tag purple">Performance</span>
+        </div>
+      </div>
+
+      <div class="project-card">
+        <h3><span class="icon">🔗</span> Microservices Integration Tests</h3>
+        <p>BDD framework using Behave covering 60+ microservices with RabbitMQ and Kafka for data routing and DB validation, fully integrated in GitLab CI.</p>
+        <div class="tags">
+          <span class="tag">Behave</span>
+          <span class="tag">Kafka</span>
+          <span class="tag">RabbitMQ</span>
+          <span class="tag purple">BDD</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- EDUCATION -->
+  <section id="education">
+    <div class="section-header fade-in">
+      <h2>Education</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="edu-list fade-in">
+      <div class="edu-card">
+        <div>
+          <h3>B.Tech — Computer Science Engineering</h3>
+          <p>MIT University, Meghalaya · Specialisation in Cloud Computing &amp; Virtualization</p>
+        </div>
+        <div class="edu-meta">
+          <div class="date">2014 – 2018</div>
+          <div class="grade">CGPA 3.05 / 4.00</div>
+        </div>
+      </div>
+      <div class="edu-card">
+        <div>
+          <h3>Class XII — CBSE</h3>
+          <p>Kendriya Vidyalaya</p>
+        </div>
+        <div class="edu-meta">
+          <div class="date">2013 – 2014</div>
+          <div class="grade">75.4%</div>
+        </div>
+      </div>
+      <div class="edu-card">
+        <div>
+          <h3>Class X — CBSE</h3>
+          <p>Kendriya Vidyalaya</p>
+        </div>
+        <div class="edu-meta">
+          <div class="date">2011 – 2012</div>
+          <div class="grade">CGPA 8.6 / 10</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="section-header fade-in">
+      <h2>Contact</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="contact-grid fade-in">
+      <a class="contact-link" href="https://in.linkedin.com/in/prakhar-gupta-7021789a" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+        </svg>
+        LinkedIn
+      </a>
+      <a class="contact-link" href="https://github.com/venom0107" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+        GitHub
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    &copy; 2025 Prakhar Gupta · Built with HTML &amp; CSS
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+      { threshold: 0.1 }
+    );
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
