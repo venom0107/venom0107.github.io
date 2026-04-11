@@ -423,6 +423,114 @@
       .btn-next { justify-content: center; }
     }
 
+    /* ── Game history ── */
+    .history-section {
+      margin-top: 32px;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .history-header h2 {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+    }
+
+    .history-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 1px 7px;
+      border-radius: 20px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .history-game-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--gold);
+      background: rgba(240,165,0,0.1);
+      border: 1px solid rgba(240,165,0,0.25);
+      padding: 3px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      min-width: 52px;
+      text-align: center;
+    }
+
+    .history-players {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .history-player {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 8px 3px 4px;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .history-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .history-avatar-fallback {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    .history-time {
+      font-size: 0.7rem;
+      color: var(--muted);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
     /* ── How it works modal ── */
     .modal-backdrop {
       position: fixed;
@@ -597,6 +705,15 @@
     <button class="btn-next" id="nextBtn" onclick="generateNextGame()">▶ Next Game</button>
   </div>
 
+  <!-- HISTORY -->
+  <div class="history-section" id="historySection" style="display:none">
+    <div class="history-header">
+      <h2>Game History</h2>
+      <span class="history-count" id="historyCount"></span>
+    </div>
+    <div id="historyList"></div>
+  </div>
+
 </div>
 
 <div class="toast" id="toast"></div>
@@ -665,6 +782,7 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const s = JSON.parse(raw);
+        if (!s.history) s.history = [];
         // Migrate old schema: waiting→queue, playing stays, pinned→confirmed
         s.players?.forEach(p => {
           if (p.status === 'waiting') p.status = 'queue';
@@ -674,7 +792,7 @@
         return s;
       }
     } catch (_) {}
-    return { players: [], gameNumber: 0, nextId: 1 };
+    return { players: [], history: [], gameNumber: 0, nextId: 1 };
   }
 
   function saveState() {
@@ -847,6 +965,14 @@
     });
 
     state.gameNumber++;
+
+    // Record history entry before saving
+    const gamePlayers = state.players
+      .filter(p => nextIds.has(p.id))
+      .map(p => ({ name: p.name, avatarUrl: p.avatarUrl || null }));
+    if (!state.history) state.history = [];
+    state.history.unshift({ game: state.gameNumber, players: gamePlayers, ts: Date.now() });
+
     saveState();
     render();
 
@@ -864,6 +990,7 @@
       p.status = 'queue'; p.waitRounds = 0;
     });
     state.gameNumber = 0;
+    state.history = [];
     saveState();
     render();
     showToast('Session reset');
@@ -893,6 +1020,7 @@
       : emptyState('✅', 'No players yet', 'Add players above to get started');
 
     document.getElementById('nextBtn').disabled = state.players.length === 0;
+    renderHistory();
   }
 
   function playerCard(p) {
@@ -932,6 +1060,34 @@
             onclick="removePlayer(${p.id})" aria-label="Remove">✕</button>
         </div>
       </div>`;
+  }
+
+  function renderHistory() {
+    const history = state.history || [];
+    const section = document.getElementById('historySection');
+    section.style.display = history.length ? '' : 'none';
+    if (!history.length) return;
+
+    document.getElementById('historyCount').textContent = `${history.length} game${history.length > 1 ? 's' : ''}`;
+
+    document.getElementById('historyList').innerHTML = history.map(entry => {
+      const time = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const players = entry.players.map(p => {
+        const av = p.avatarUrl
+          ? `<img class="history-avatar" src="${escHtml(p.avatarUrl)}"
+                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+             ><span class="history-avatar-fallback" style="display:none;background:${nameColor(p.name)}">${escHtml(p.name[0])}</span>`
+          : `<span class="history-avatar-fallback" style="background:${nameColor(p.name)}">${escHtml(p.name[0])}</span>`;
+        return `<span class="history-player">${av}${escHtml(p.name)}</span>`;
+      }).join('');
+
+      return `
+        <div class="history-card">
+          <span class="history-game-num">#${entry.game}</span>
+          <div class="history-players">${players}</div>
+          <span class="history-time">${time}</span>
+        </div>`;
+    }).join('');
   }
 
   function emptyState(icon, title, sub) {
