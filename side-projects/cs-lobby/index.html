@@ -217,10 +217,17 @@
     .player-list {
       padding: 10px;
       min-height: 80px;
+      max-height: 420px;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 7px;
     }
+
+    .player-list::-webkit-scrollbar { width: 6px; }
+    .player-list::-webkit-scrollbar-track { background: transparent; }
+    .player-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .player-list::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
     /* ── Player card ── */
     .player-card {
