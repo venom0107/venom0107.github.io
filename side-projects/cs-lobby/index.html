@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS2 Lobby Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --surface:  #161b22;
+      --surface2: #21262d;
+      --border:   #30363d;
+      --text:     #e6edf3;
+      --muted:    #8b949e;
+      --gold:     #f0a500;
+      --green:    #3fb950;
+      --blue:     #58a6ff;
+      --red:      #f85149;
+      --orange:   #ff7b29;
+      --radius:   10px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .app {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+      min-height: 100%;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: var(--gold);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.3px; }
+
+    .game-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Add player ── */
+    .add-section { margin-bottom: 22px; }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .add-row input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      outline: none;
+      transition: border-color 0.15s;
+      min-width: 0;
+    }
+
+    .add-row input::placeholder { color: var(--muted); }
+    .add-row input:focus { border-color: var(--gold); }
+
+    .add-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding-left: 2px;
+    }
+
+    .add-hint a { color: var(--blue); text-decoration: none; }
+
+    /* ── Buttons ── */
+    button {
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      border-radius: var(--radius);
+      transition: opacity 0.15s, background 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    button:active:not(:disabled) { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--gold);
+      color: #000;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: 0.85; }
+    .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+    .btn-next {
+      background: var(--green);
+      color: #000;
+      padding: 13px 32px;
+      font-size: 0.95rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-next:hover:not(:disabled) { opacity: 0.85; }
+    .btn-next:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+    /* spinner */
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Panels ── */
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 580px) { .panels { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .panel-header h2 {
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+    }
+
+    .slot-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    .slot-count.ingame  { background: rgba(63,185,80,0.15);  color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .slot-count.waiting { background: rgba(88,166,255,0.1); color: var(--blue);  border: 1px solid rgba(88,166,255,0.25); }
+
+    .player-list {
+      padding: 10px;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    /* ── Player card ── */
+    .player-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.15s;
+      animation: slideIn 0.18s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .player-card.is-pinned { border-color: rgba(240,165,0,0.5);  background: rgba(240,165,0,0.05); }
+    .player-card.is-last   { border-color: rgba(248,81,73,0.45); }
+
+    /* ── Avatar ── */
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+      display: block;
+    }
+
+    .avatar-fallback {
+      width: 34px;
+      height: 34px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #000;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .player-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .player-name {
+      font-weight: 600;
+      font-size: 0.88rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .player-sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .badge-pin  { background: rgba(240,165,0,0.2);  color: var(--gold); border: 1px solid rgba(240,165,0,0.4); }
+    .badge-last { background: rgba(248,81,73,0.15); color: var(--red);  border: 1px solid rgba(248,81,73,0.35); }
+    .badge-default { background: rgba(88,166,255,0.1); color: var(--blue); border: 1px solid rgba(88,166,255,0.25); }
+
+    .wait-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--blue);
+    }
+
+    .player-rank {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      min-width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* icon action buttons */
+    .card-actions { display: flex; gap: 3px; flex-shrink: 0; }
+
+    .icon-btn {
+      width: 27px;
+      height: 27px;
+      padding: 0;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid transparent;
+      flex-shrink: 0;
+    }
+    .icon-btn:hover { background: var(--border); color: var(--text); border-color: var(--border); }
+    .icon-btn.active-pin     { color: var(--gold); background: rgba(240,165,0,0.12); border-color: rgba(240,165,0,0.3); }
+    .icon-btn.active-last    { color: var(--red);  background: rgba(248,81,73,0.1);  border-color: rgba(248,81,73,0.3); }
+    .icon-btn.active-default { color: var(--blue); background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.25); }
+    .icon-btn.remove:hover   { color: var(--red);  background: rgba(248,81,73,0.1);  border-color: rgba(248,81,73,0.25); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.8;
+    }
+    .empty-state .eicon { font-size: 26px; margin-bottom: 6px; }
+
+    /* ── Bottom bar ── */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: var(--muted); }
+    .legend-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+      z-index: 999;
+      max-width: 340px;
+      text-align: center;
+      white-space: pre-line;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Tooltips ── */
+    [data-tip] { position: relative; }
+    [data-tip]:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 5px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    @media (max-width: 420px) {
+      h1 { font-size: 1.1rem; }
+      .game-badge { display: none; }
+      .bottom-bar { flex-direction: column; align-items: stretch; }
+      .btn-next { justify-content: center; }
+    }
+
+    /* ── How it works modal ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      max-width: 480px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(10px);
+      transition: transform 0.2s;
+    }
+    .modal-backdrop.open .modal { transform: translateY(0); }
+    .modal h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal section { margin-bottom: 20px; }
+    .modal section:last-child { margin-bottom: 0; }
+    .modal section h4 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .modal ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .modal ul li {
+      display: flex;
+      gap: 10px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .modal ul li .mi {
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+    }
+    .priority-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.88rem;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: var(--surface2);
+      margin-bottom: 6px;
+    }
+    .priority-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .how-link {
+      background: none;
+      border: none;
+      color: var(--blue);
+      font-size: 0.78rem;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      font-family: inherit;
+    }
+    .how-link:hover { opacity: 0.8; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="header-left">
+      <div class="logo">🎮</div>
+      <h1>CS2 Lobby Manager</h1>
+      <span class="game-badge">Game #<span id="gameNum">0</span></span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-ghost" onclick="resetSession()">Reset session</button>
+    </div>
+  </header>
+
+  <div class="add-section">
+    <div class="add-row">
+      <input
+        type="text"
+        id="playerInput"
+        placeholder="Name, Steam URL, or SteamID64…"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') handleAdd()"
+        maxlength="120"
+      >
+      <button class="btn-primary" id="addBtn" onclick="handleAdd()">
+        <span id="addBtnLabel">+ Add</span>
+      </button>
+    </div>
+    <p class="add-hint">
+      Paste a Steam profile URL or SteamID64 to auto-fetch name &amp; avatar.
+      ⭐ marks a player as a <strong>default</strong> — they load automatically every session.
+      <button class="how-link" onclick="openModal()">How does it work?</button>
+    </p>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>In Game</h2>
+        <span class="slot-count ingame" id="inGameCount">0 / 5</span>
+      </div>
+      <div class="player-list" id="inGameList"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Waiting</h2>
+        <span class="slot-count waiting" id="waitingCount">0</span>
+      </div>
+      <div class="player-list" id="waitingList"></div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Default (always loads)</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span>Pinned (guaranteed next)</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Last game</span>
+    </div>
+    <button class="btn-next" id="nextBtn" onclick="generateNextGame()">▶ Next Game</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- How it works modal -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModalOnBackdrop(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">
+      How it works
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+    </h3>
+
+    <section>
+      <h4>Next Game priority order</h4>
+      <div class="priority-row">
+        <span class="priority-num" style="background:rgba(240,165,0,0.2);color:var(--gold)">1</span>
+        <div><strong>📌 Pinned players</strong> — always get a slot, regardless of whether they just played or have been waiting.</div>
+      </div>
+      <div class="priority-row">
+        <span class="priority-num" style="background:rgba(88,166,255,0.12);color:var(--blue)">2</span>
+        <div><strong>Waiting players</strong> — anyone sitting out fills remaining slots. Longer wait = higher priority within this group.</div>
+      </div>
+      <div class="priority-row">
+        <span class="priority-num" style="background:rgba(63,185,80,0.12);color:var(--green)">3</span>
+        <div><strong>Just played</strong> — players from the previous game fill any leftover slots, picked randomly.</div>
+      </div>
+    </section>
+
+    <section>
+      <h4>Buttons on each player</h4>
+      <ul>
+        <li><span class="mi">⭐</span><span><strong>Default</strong> — saves this player permanently. They're auto-added every time you open the app or reset the session.</span></li>
+        <li><span class="mi">📌</span><span><strong>Pin</strong> — guarantees this player a slot in the very next game. The pin is consumed after one use.</span></li>
+        <li><span class="mi">🚩</span><span><strong>Last game</strong> — marks a player who's leaving soon. Auto-pins them so they get one final game before they go.</span></li>
+        <li><span class="mi">✕</span><span><strong>Remove</strong> — takes the player out of the current session.</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h4>Adding players</h4>
+      <ul>
+        <li><span class="mi">🎮</span><span>Paste a <strong>Steam profile URL</strong> (e.g. <code style="font-size:0.8em;color:var(--muted)">steamcommunity.com/id/…</code>) or a <strong>SteamID64</strong> to auto-import their Steam name and profile picture.</span></li>
+        <li><span class="mi">✏️</span><span>Or just type any name and hit <strong>Add</strong> — works without Steam too.</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h4>Reset session</h4>
+      <ul>
+        <li><span class="mi">🔄</span><span>Keeps all players in the pool but clears the game counter and resets everyone's status back to <em>Waiting</em>.</span></li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+  const LOBBY_SIZE  = 5;
+  const STORAGE_KEY = 'cs_lobby_v1';
+
+  // ── State ─────────────────────────────────────────────────────────────────
+
+  let state = loadState();
+
+  // On fresh open with no players but saved defaults, restore them
+  if (state.players.length === 0 && state.defaults.length > 0) {
+    spawnDefaults();
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw);
+        if (!s.defaults) s.defaults = [];
+        return s;
+      }
+    } catch (_) {}
+    return { players: [], defaults: [], gameNumber: 0, nextId: 1 };
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ── Defaults ──────────────────────────────────────────────────────────────
+
+  function spawnDefaults() {
+    state.defaults.forEach(d => {
+      const already = state.players.find(p =>
+        (d.steamId64 && p.steamId64 === d.steamId64) ||
+        p.name.toLowerCase() === d.name.toLowerCase()
+      );
+      if (!already) {
+        state.players.push({
+          id: state.nextId++,
+          name: d.name,
+          avatarUrl:  d.avatarUrl  || null,
+          steamId64:  d.steamId64  || null,
+          status:     'waiting',
+          pinned:     false,
+          lastGame:   false,
+          waitRounds: 0,
+          isDefault:  true
+        });
+      }
+    });
+  }
+
+  function toggleDefault(id) {
+    const p = state.players.find(p => p.id === id);
+    if (!p) return;
+    p.isDefault = !p.isDefault;
+
+    if (p.isDefault) {
+      if (!state.defaults.find(d =>
+        (p.steamId64 && d.steamId64 === p.steamId64) ||
+        d.name.toLowerCase() === p.name.toLowerCase()
+      )) {
+        state.defaults.push({ name: p.name, avatarUrl: p.avatarUrl, steamId64: p.steamId64 });
+      }
+      showToast(`⭐ ${p.name} saved as default`);
+    } else {
+      state.defaults = state.defaults.filter(d =>
+        !(d.name.toLowerCase() === p.name.toLowerCase() ||
+          (p.steamId64 && d.steamId64 === p.steamId64))
+      );
+      showToast(`${p.name} removed from defaults`);
+    }
+
+    saveState();
+    render();
+  }
+
+  // ── Steam lookup ──────────────────────────────────────────────────────────
+
+  function looksLikeSteam(input) {
+    return input.includes('steamcommunity.com') || /^765\d{14}$/.test(input.trim());
+  }
+
+  function parseSteamInput(input) {
+    input = input.trim();
+    let m;
+    m = input.match(/steamcommunity\.com\/profiles\/(\d{15,})/);
+    if (m) return { type: 'id64', value: m[1] };
+    m = input.match(/steamcommunity\.com\/id\/([^/?#\s]+)/);
+    if (m) return { type: 'vanity', value: m[1] };
+    if (/^765\d{14}$/.test(input)) return { type: 'id64', value: input };
+    return null;
+  }
+
+  async function fetchSteamData(input) {
+    const parsed = parseSteamInput(input);
+    if (!parsed) throw new Error('Could not parse Steam URL or ID');
+
+    const steamUrl = parsed.type === 'id64'
+      ? `https://steamcommunity.com/profiles/${parsed.value}/?xml=1`
+      : `https://steamcommunity.com/id/${encodeURIComponent(parsed.value)}/?xml=1`;
+
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(steamUrl)}`;
+    const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
+    if (!resp.ok) throw new Error(`Proxy returned ${resp.status}`);
+
+    const json = await resp.json();
+    const xmlText = json.contents;
+    if (!xmlText) throw new Error('Empty response from proxy');
+
+    const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+
+    const errNode = xml.querySelector('error');
+    if (errNode) throw new Error(errNode.textContent || 'Profile not found or private');
+
+    const name = xml.querySelector('steamID')?.textContent?.trim();
+    if (!name) throw new Error('Profile may be private or not found');
+
+    const avatar =
+      xml.querySelector('avatarFull')?.textContent?.trim() ||
+      xml.querySelector('avatarMedium')?.textContent?.trim() ||
+      null;
+    const id64 = xml.querySelector('steamID64')?.textContent?.trim() || null;
+
+    return { name, avatarUrl: avatar, steamId64: id64 };
+  }
+
+  // ── Add player ────────────────────────────────────────────────────────────
+
+  async function handleAdd() {
+    const inputEl = document.getElementById('playerInput');
+    const raw = inputEl.value.trim();
+    if (!raw) return;
+
+    if (looksLikeSteam(raw)) {
+      setAddLoading(true);
+      try {
+        const { name, avatarUrl, steamId64 } = await fetchSteamData(raw);
+        addPlayer(name, avatarUrl, steamId64);
+        inputEl.value = '';
+      } catch (err) {
+        showToast(`Steam lookup failed:\n${err.message}`);
+      } finally {
+        setAddLoading(false);
+        inputEl.focus();
+      }
+    } else {
+      addPlayer(raw, null, null);
+      inputEl.value = '';
+      inputEl.focus();
+    }
+  }
+
+  function addPlayer(name, avatarUrl, steamId64) {
+    const dup = state.players.find(p =>
+      (steamId64 && p.steamId64 === steamId64) ||
+      p.name.toLowerCase() === name.toLowerCase()
+    );
+    if (dup) { showToast(`"${name}" is already in the pool`); return; }
+
+    state.players.push({
+      id:         state.nextId++,
+      name,
+      avatarUrl:  avatarUrl  || null,
+      steamId64:  steamId64  || null,
+      status:     'waiting',
+      pinned:     false,
+      lastGame:   false,
+      waitRounds: 0,
+      isDefault:  false
+    });
+
+    saveState();
+    render();
+  }
+
+  function setAddLoading(loading) {
+    const btn   = document.getElementById('addBtn');
+    const label = document.getElementById('addBtnLabel');
+    const input = document.getElementById('playerInput');
+    btn.disabled  = loading;
+    input.disabled = loading;
+    label.innerHTML = loading
+      ? '<span class="spinner"></span> Fetching…'
+      : '+ Add';
+  }
+
+  // ── Player actions ────────────────────────────────────────────────────────
+
+  function removePlayer(id) {
+    const p = state.players.find(p => p.id === id);
+    if (p && p.isDefault) {
+      state.defaults = state.defaults.filter(d =>
+        !(d.name.toLowerCase() === p.name.toLowerCase() ||
+          (p.steamId64 && d.steamId64 === p.steamId64))
+      );
+    }
+    state.players = state.players.filter(p => p.id !== id);
+    saveState();
+    render();
+  }
+
+  function togglePin(id) {
+    const p = state.players.find(p => p.id === id);
+    if (!p) return;
+    p.pinned = !p.pinned;
+    if (!p.pinned) p.lastGame = false;
+    saveState();
+    render();
+  }
+
+  function toggleLastGame(id) {
+    const p = state.players.find(p => p.id === id);
+    if (!p) return;
+    p.lastGame = !p.lastGame;
+    if (p.lastGame) {
+      p.pinned = true;
+      showToast(`${p.name} pinned for one last game`);
+    }
+    saveState();
+    render();
+  }
+
+  // ── Game generation ───────────────────────────────────────────────────────
+
+  function generateNextGame() {
+    if (state.players.length === 0) { showToast('Add some players first!'); return; }
+
+    const shuffle = arr => arr.sort(() => Math.random() - 0.5);
+
+    const pinned     = state.players.filter(p => p.pinned);
+    const waiting    = shuffle(state.players.filter(p => !p.pinned && p.status === 'waiting'))
+                         .sort((a, b) => b.waitRounds - a.waitRounds);
+    const justPlayed = shuffle(state.players.filter(p => !p.pinned && p.status === 'playing'));
+
+    if (pinned.length > LOBBY_SIZE) {
+      showToast(`⚠ ${pinned.length} pinned but only ${LOBBY_SIZE} slots — taking first ${LOBBY_SIZE}`);
+    }
+
+    const nextIds = new Set();
+    for (const p of pinned)     { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
+    for (const p of waiting)    { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
+    for (const p of justPlayed) { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
+
+    state.players.forEach(p => {
+      if (nextIds.has(p.id)) {
+        p.status = 'playing'; p.waitRounds = 0; p.pinned = false;
+      } else {
+        if (p.status === 'playing') { p.status = 'waiting'; p.waitRounds = 0; }
+        else { p.waitRounds++; }
+        p.pinned = false;
+      }
+    });
+
+    state.gameNumber++;
+    saveState();
+    render();
+
+    const inGame = state.players.filter(p => p.status === 'playing').length;
+    const bench  = state.players.length - inGame;
+    showToast(bench > 0
+      ? `Game ${state.gameNumber} — ${inGame} playing, ${bench} waiting`
+      : `Game ${state.gameNumber} — everyone's in!`
+    );
+  }
+
+  function resetSession() {
+    if (!confirm('Reset session? All players stay but game history clears.')) return;
+    state.players.forEach(p => {
+      p.status = 'waiting'; p.pinned = false; p.lastGame = false; p.waitRounds = 0;
+    });
+    state.gameNumber = 0;
+    saveState();
+    render();
+    showToast('Session reset');
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  function render() {
+    const playing = state.players.filter(p => p.status === 'playing');
+    const waiting = state.players
+      .filter(p => p.status === 'waiting')
+      .sort((a, b) => b.waitRounds - a.waitRounds);
+
+    document.getElementById('gameNum').textContent      = state.gameNumber;
+    document.getElementById('inGameCount').textContent  = `${playing.length} / ${LOBBY_SIZE}`;
+    document.getElementById('waitingCount').textContent = waiting.length;
+
+    document.getElementById('inGameList').innerHTML = playing.length
+      ? playing.map(p => playerCard(p, false, 0)).join('')
+      : emptyState('👾', 'No one in game yet', 'Hit ▶ Next Game to fill the lobby');
+
+    document.getElementById('waitingList').innerHTML = waiting.length
+      ? waiting.map((p, i) => playerCard(p, true, i + 1)).join('')
+      : emptyState('✅', 'Queue is empty', state.players.length === 0
+          ? 'Add players above to get started'
+          : 'Everyone is playing!');
+
+    document.getElementById('nextBtn').disabled = state.players.length === 0;
+  }
+
+  function playerCard(p, isWaiting, rank) {
+    const pinnedCls  = p.pinned    ? 'is-pinned' : '';
+    const lastCls    = p.lastGame  ? 'is-last'   : '';
+    const pinBtnCls  = p.pinned    ? 'icon-btn active-pin'     : 'icon-btn';
+    const lastBtnCls = p.lastGame  ? 'icon-btn active-last'    : 'icon-btn';
+    const defBtnCls  = p.isDefault ? 'icon-btn active-default' : 'icon-btn';
+
+    const badges = [
+      p.isDefault ? '<span class="badge badge-default">⭐ Default</span>' : '',
+      p.pinned    ? '<span class="badge badge-pin">📌 Pinned</span>'      : '',
+      p.lastGame  ? '<span class="badge badge-last">🚩 Last</span>'       : '',
+      isWaiting && p.waitRounds > 0
+        ? `<span class="wait-badge">${p.waitRounds}r waiting</span>`      : ''
+    ].join('');
+
+    const rankEl = isWaiting && rank
+      ? `<span class="player-rank">#${rank}</span>`
+      : '';
+
+    const avatarEl = p.avatarUrl
+      ? `<img class="avatar" src="${escHtml(p.avatarUrl)}"
+             alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+         ><span class="avatar-fallback" style="display:none;background:${nameColor(p.name)}">${escHtml(p.name[0])}</span>`
+      : `<span class="avatar-fallback" style="background:${nameColor(p.name)}">${escHtml(p.name[0])}</span>`;
+
+    return `
+      <div class="player-card ${pinnedCls} ${lastCls}">
+        ${rankEl}
+        ${avatarEl}
+        <div class="player-info">
+          <span class="player-name" title="${escHtml(p.name)}">${escHtml(p.name)}</span>
+          <div class="player-sub">${badges}</div>
+        </div>
+        <div class="card-actions">
+          <button class="${defBtnCls}" data-tip="${p.isDefault ? 'Remove from defaults' : 'Save as default'}"
+            onclick="toggleDefault(${p.id})" aria-label="Toggle default">⭐</button>
+          <button class="${pinBtnCls}" data-tip="${p.pinned ? 'Unpin' : 'Pin for next game'}"
+            onclick="togglePin(${p.id})" aria-label="Toggle pin">📌</button>
+          <button class="${lastBtnCls}" data-tip="${p.lastGame ? 'Remove last-game mark' : 'Mark as last game'}"
+            onclick="toggleLastGame(${p.id})" aria-label="Toggle last game">🚩</button>
+          <button class="icon-btn remove" data-tip="Remove player"
+            onclick="removePlayer(${p.id})" aria-label="Remove">✕</button>
+        </div>
+      </div>`;
+  }
+
+  function emptyState(icon, title, sub) {
+    return `
+      <div class="empty-state">
+        <div class="eicon">${icon}</div>
+        <strong>${title}</strong><br>
+        <span>${sub}</span>
+      </div>`;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  function nameColor(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+    return `hsl(${Math.abs(h) % 360}, 60%, 52%)`;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  let toastTimer;
+  function showToast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ── Modal ─────────────────────────────────────────────────────────────────
+
+  function openModal() {
+    document.getElementById('modalBackdrop').classList.add('open');
+    document.addEventListener('keydown', onModalKey);
+  }
+
+  function closeModal() {
+    document.getElementById('modalBackdrop').classList.remove('open');
+    document.removeEventListener('keydown', onModalKey);
+  }
+
+  function closeModalOnBackdrop(e) {
+    if (e.target === document.getElementById('modalBackdrop')) closeModal();
+  }
+
+  function onModalKey(e) {
+    if (e.key === 'Escape') closeModal();
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+
+  render();
+</script>
+</body>
+</html>
