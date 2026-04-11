@@ -239,6 +239,7 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     .player-card.is-confirmed { border-color: rgba(240,165,0,0.45); background: rgba(240,165,0,0.04); }
+    .player-card.is-bench { opacity: 0.45; }
 
     /* ── Avatar ── */
     .avatar {
@@ -890,7 +891,7 @@
   function playerCard(p) {
     const isPlaying = p.status === 'playing';
 
-    const cardCls = p.status === 'confirmed' ? 'is-confirmed' : '';
+    const cardCls = p.status === 'confirmed' ? 'is-confirmed' : p.status === 'bench' ? 'is-bench' : '';
 
     const waitLabel = !isPlaying && p.waitRounds > 0
       ? `<span style="font-size:0.68rem;color:var(--muted)">${p.waitRounds}r</span>` : '';
