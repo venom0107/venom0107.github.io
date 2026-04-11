@@ -186,6 +186,7 @@
       transition: all 0.2s;
       cursor: pointer;
       border: none;
+      font-family: inherit;
     }
 
     .btn-primary {
@@ -516,7 +517,7 @@
       transform: translateY(0);
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 900px) {
       .nav-links { display: none; }
       .hamburger { display: flex; }
       .timeline-date { margin-left: 0; }
@@ -555,7 +556,7 @@
 
   <!-- HERO -->
   <div class="hero">
-    <div class="hero-content fade-in">
+    <div class="hero-content">
       <span class="hero-tag">// Senior SDET · 8+ Years</span>
       <h1>Prakhar<br /><span>Gupta</span></h1>
       <p class="hero-subtitle">Software Development Engineer in Test</p>
@@ -568,6 +569,10 @@
       <div class="hero-links">
         <a class="btn btn-primary" href="#contact">Get in touch</a>
         <a class="btn btn-outline" href="#experience">View experience</a>
+        <button class="btn btn-outline" onclick="downloadResume()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Resume
+        </button>
       </div>
     </div>
   </div>
@@ -930,7 +935,266 @@
     &copy; 2026 Prakhar Gupta · Built with HTML &amp; CSS
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
+    function downloadResume() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+      const pageW = 210;
+      const pageH = 297;
+      const margin = 18;
+      const contentW = pageW - margin * 2;
+      let y = 22;
+
+      const BLACK  = [15, 17, 22];
+      const ACCENT = [37, 99, 235];
+      const MUTED  = [100, 116, 139];
+      const RULE   = [220, 226, 232];
+
+      function checkPage(needed = 8) {
+        if (y + needed > pageH - 15) { doc.addPage(); y = 22; }
+      }
+
+      function rule(color = RULE) {
+        doc.setDrawColor(...color);
+        doc.setLineWidth(0.25);
+        doc.line(margin, y, pageW - margin, y);
+      }
+
+      function sectionHead(title) {
+        checkPage(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...ACCENT);
+        doc.text(title.toUpperCase(), margin, y);
+        y += 2.5;
+        rule(ACCENT);
+        y += 5;
+      }
+
+      // ── HEADER ──────────────────────────────────────────────────────────
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(24);
+      doc.setTextColor(...BLACK);
+      doc.text('Prakhar Gupta', margin, y);
+      y += 8;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10.5);
+      doc.setTextColor(...MUTED);
+      doc.text('Software Development Engineer in Test  ·  Senior SDET  ·  8+ Years', margin, y);
+      y += 5.5;
+
+      doc.setFontSize(8.5);
+      doc.text('linkedin.com/in/prakhar-gupta-7021789a  ·  venom0107.github.io  ·  github.com/venom0107', margin, y);
+      y += 5;
+      rule();
+      y += 7;
+
+      // ── SUMMARY ─────────────────────────────────────────────────────────
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...BLACK);
+      const summary = '8+ years in, and I still get a kick out of breaking things before users do. I build automation frameworks that actually scale — across web, mobile, and backend — and I care just as much about the developer experience as I do about test coverage. If there\'s a smarter, leaner way to ship quality, I\'ll find it.';
+      const summaryLines = doc.splitTextToSize(summary, contentW);
+      doc.text(summaryLines, margin, y);
+      y += summaryLines.length * 4.8 + 6;
+
+      // ── SKILLS ──────────────────────────────────────────────────────────
+      sectionHead('Skills');
+
+      const skills = [
+        ['Languages',           'Python, TypeScript, JavaScript'],
+        ['Automation',          'Playwright, WebDriverIO, Appium, Cypress, Behave, Gauge, JMeter'],
+        ['Cloud & DevOps',      'AWS, OpenStack, Docker, Kubernetes, GitHub Actions, GitLabCI, Jenkins'],
+        ['Databases & Messaging','PostgreSQL, Redis, ElasticSearch, Kafka, RabbitMQ'],
+        ['Tools & Platforms',   'TestRail, QASE.io, ReportPortal, LambdaTest'],
+        ['AI & LLMs',           'LangChain, LangGraph, OpenAI, Claude, Playwright MCP, GitHub Copilot, Cursor'],
+      ];
+
+      doc.setFontSize(9);
+      for (const [cat, items] of skills) {
+        checkPage(6);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...BLACK);
+        const catLabel = cat + ': ';
+        doc.text(catLabel, margin, y);
+        const catW = doc.getTextWidth(catLabel);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...MUTED);
+        const itemLines = doc.splitTextToSize(items, contentW - catW);
+        doc.text(itemLines, margin + catW, y);
+        y += itemLines.length * 4.5 + 1.5;
+      }
+      y += 3;
+
+      // ── EXPERIENCE ──────────────────────────────────────────────────────
+      sectionHead('Experience');
+
+      const experience = [
+        {
+          role: 'Senior SDET', company: 'Netskope', date: 'Present',
+          bullets: []
+        },
+        {
+          role: 'SDET-3', company: 'Sortly', date: 'Aug 2023 – 2025',
+          bullets: [
+            'Owned end-to-end test automation across web and mobile platforms, ensuring reliable coverage for critical product features.',
+            'Built shared tooling that eliminated duplication across test suites, improving consistency and long-term maintainability.',
+            'Reduced infrastructure costs by ~60% by identifying and executing a more efficient CI execution strategy.',
+            'Improved mobile test reliability and scalability by transitioning to cloud-based device execution.',
+            'Streamlined developer workflows through better logging, media capture, and emulator setup tooling.',
+          ]
+        },
+        {
+          role: 'SDET-2', company: 'MindTickle', date: 'Feb 2021 – Aug 2023',
+          bullets: [
+            'Drove significant efficiency gains in test execution, cutting cycle times from hours to minutes.',
+            'Validated platform stability at scale, supporting high-traffic events with confidence in system performance.',
+            'Established engineering best practices across the QA team through mentorship, code reviews, and process improvements.',
+            'Collaborated across engineering, product, and infrastructure teams to embed quality early in the development lifecycle.',
+          ]
+        },
+        {
+          role: 'SDET', company: 'MindTickle', date: 'Jan 2018 – Feb 2021',
+          bullets: [
+            'Built quality infrastructure from the ground up across multiple product areas — API, frontend, mobile, integration, performance, and contract testing.',
+            'Contributed to establishing a culture of quality across engineering teams from the early stages of the product.',
+          ]
+        },
+      ];
+
+      doc.setFontSize(9);
+      for (const exp of experience) {
+        checkPage(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...BLACK);
+        doc.text(`${exp.role}  ·  ${exp.company}`, margin, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...MUTED);
+        doc.text(exp.date, pageW - margin, y, { align: 'right' });
+        y += 5;
+        for (const bullet of exp.bullets) {
+          checkPage(6);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...BLACK);
+          const bLines = doc.splitTextToSize('\u2022  ' + bullet, contentW - 5);
+          doc.text(bLines, margin + 3, y);
+          y += bLines.length * 4.2 + 1;
+        }
+        y += 3;
+      }
+
+      // ── KEY PROJECTS ─────────────────────────────────────────────────────
+      sectionHead('Key Projects');
+
+      const projects = [
+        { name: 'Automation QA SDK',              company: 'Sortly',     desc: 'Centralised TypeScript SDK with typed API clients, DTOs, Faker-based test data, and ReportPortal integration. Ships via GitHub Actions with semantic versioning.' },
+        { name: 'Playwright Web Automation',       company: 'Sortly',     desc: 'Full-coverage Playwright framework; migrated CI to AWS EC2 cutting monthly costs by ~60%.' },
+        { name: 'Mobile Automation (Appium)',      company: 'Sortly',     desc: 'Native iOS & Android test suite with LambdaTest cloud execution and S3-based app version management.' },
+        { name: 'API Automation (Gauge)',          company: 'MindTickle', desc: 'Multi-threaded API framework with Redis tenant isolation. Slashed test cycle from 5 hours to 20 minutes.' },
+        { name: 'Load Testing (JMeter)',           company: 'MindTickle', desc: 'Distributed JMeter load test across EC2 for a 30k-user event; p95/p99 latency analysis under peak load.' },
+        { name: 'Microservices Integration Tests', company: 'MindTickle', desc: 'BDD framework (Behave) covering 60+ microservices with RabbitMQ and Kafka, integrated in GitLab CI.' },
+      ];
+
+      doc.setFontSize(9);
+      for (const proj of projects) {
+        checkPage(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...BLACK);
+        doc.text(proj.name, margin, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...MUTED);
+        doc.text('[' + proj.company + ']', pageW - margin, y, { align: 'right' });
+        y += 4.5;
+        doc.setTextColor(...BLACK);
+        const dLines = doc.splitTextToSize(proj.desc, contentW - 5);
+        doc.text(dLines, margin + 3, y);
+        y += dLines.length * 4.2 + 3;
+      }
+
+      // ── SIDE PROJECTS ────────────────────────────────────────────────────
+      sectionHead('Side Projects');
+
+      const sideProjects = [
+        {
+          name: 'CS2 Lobby Manager',
+          tech: 'HTML, CSS, JavaScript, Steam API',
+          desc: 'A browser-based tool to manage Counter-Strike lobbies with more than 5 players. Each player is assigned a status — Confirmed (guaranteed next game), Queue (fair rotation by wait time), or Bench (sitting out) — so the next 5 are always picked fairly. Supports Steam profile import with avatar fetch.',
+          url: 'venom0107.github.io/side-projects/cs-lobby/',
+        },
+      ];
+
+      doc.setFontSize(9);
+      for (const sp of sideProjects) {
+        checkPage(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...BLACK);
+        doc.text(sp.name, margin, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...MUTED);
+        doc.text(sp.tech, pageW - margin, y, { align: 'right' });
+        y += 4.5;
+        doc.setTextColor(...BLACK);
+        const spLines = doc.splitTextToSize(sp.desc, contentW - 5);
+        doc.text(spLines, margin + 3, y);
+        y += spLines.length * 4.2 + 1.5;
+        doc.setTextColor(...ACCENT);
+        doc.text(sp.url, margin + 3, y);
+        y += 6;
+      }
+
+      // ── EDUCATION ────────────────────────────────────────────────────────
+      sectionHead('Education');
+
+      const education = [
+        { degree: 'B.Tech — Computer Science Engineering', school: 'MIT University, Meghalaya · Specialisation in Cloud Computing & Virtualization', date: '2014 – 2018' },
+        { degree: 'Class XII — CBSE', school: 'Kendriya Vidyalaya', date: '2013 – 2014' },
+        { degree: 'Class X — CBSE',   school: 'Kendriya Vidyalaya', date: '2011 – 2012' },
+      ];
+
+      doc.setFontSize(9);
+      for (const edu of education) {
+        checkPage(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...BLACK);
+        doc.text(edu.degree, margin, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...MUTED);
+        doc.text(edu.date, pageW - margin, y, { align: 'right' });
+        y += 4.5;
+        doc.setTextColor(...MUTED);
+        doc.text(edu.school, margin + 3, y);
+        y += 6.5;
+      }
+
+      // ── CERTIFICATIONS ───────────────────────────────────────────────────
+      sectionHead('Certifications');
+
+      const certs = [
+        { name: 'Cloud Computing & Virtualization Graduate',                    org: 'IBM',      date: 'May 2019' },
+        { name: 'Multiplatform Mobile App Development with Web Technologies',   org: 'Coursera', date: 'Oct 2017' },
+        { name: 'Server-side Development with NodeJS',                          org: 'Coursera', date: 'Sep 2017' },
+        { name: 'Front-End JavaScript Frameworks: AngularJS',                   org: 'Coursera', date: 'Jul 2017' },
+        { name: 'Front-End Web UI Frameworks and Tools',                        org: 'Coursera', date: 'Jun 2017' },
+        { name: 'HTML, CSS and JavaScript',                                     org: 'Coursera', date: 'Apr 2017' },
+      ];
+
+      doc.setFontSize(9);
+      for (const cert of certs) {
+        checkPage(6);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...BLACK);
+        doc.text('\u2022  ' + cert.name, margin, y);
+        doc.setTextColor(...MUTED);
+        doc.text(cert.org + '  ·  ' + cert.date, pageW - margin, y, { align: 'right' });
+        y += 5;
+      }
+
+      doc.save('Prakhar_Gupta_Resume.pdf');
+    }
+
     const observer = new IntersectionObserver(
       entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
       { threshold: 0.1 }
