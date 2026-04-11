@@ -745,13 +745,19 @@
       ? `https://steamcommunity.com/profiles/${parsed.value}/?xml=1`
       : `https://steamcommunity.com/id/${encodeURIComponent(parsed.value)}/?xml=1`;
 
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(steamUrl)}`;
-    const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
-    if (!resp.ok) throw new Error(`Proxy returned ${resp.status}`);
-
-    const json = await resp.json();
-    const xmlText = json.contents;
-    if (!xmlText) throw new Error('Empty response from proxy');
+    // Try corsproxy.io first (faster), fall back to allorigins
+    let xmlText;
+    try {
+      const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(steamUrl)}`, { signal: AbortSignal.timeout(14000) });
+      if (!r.ok) throw new Error(`${r.status}`);
+      xmlText = await r.text();
+    } catch (_) {
+      const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(steamUrl)}`, { signal: AbortSignal.timeout(14000) });
+      if (!r.ok) throw new Error(`Proxy returned ${r.status}`);
+      const json = await r.json();
+      xmlText = json.contents;
+    }
+    if (!xmlText) throw new Error('Empty response — try again');
 
     const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
 
