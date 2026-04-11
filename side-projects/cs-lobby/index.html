@@ -240,7 +240,6 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     .player-card.is-pinned { border-color: rgba(240,165,0,0.5);  background: rgba(240,165,0,0.05); }
-    .player-card.is-last   { border-color: rgba(248,81,73,0.45); }
 
     /* ── Avatar ── */
     .avatar {
@@ -301,8 +300,6 @@
       letter-spacing: 0.4px;
     }
     .badge-pin  { background: rgba(240,165,0,0.2);  color: var(--gold); border: 1px solid rgba(240,165,0,0.4); }
-    .badge-last { background: rgba(248,81,73,0.15); color: var(--red);  border: 1px solid rgba(248,81,73,0.35); }
-    .badge-default { background: rgba(88,166,255,0.1); color: var(--blue); border: 1px solid rgba(88,166,255,0.25); }
 
     .wait-badge {
       font-family: 'JetBrains Mono', monospace;
@@ -337,10 +334,8 @@
       flex-shrink: 0;
     }
     .icon-btn:hover { background: var(--border); color: var(--text); border-color: var(--border); }
-    .icon-btn.active-pin     { color: var(--gold); background: rgba(240,165,0,0.12); border-color: rgba(240,165,0,0.3); }
-    .icon-btn.active-last    { color: var(--red);  background: rgba(248,81,73,0.1);  border-color: rgba(248,81,73,0.3); }
-    .icon-btn.active-default { color: var(--blue); background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.25); }
-    .icon-btn.remove:hover   { color: var(--red);  background: rgba(248,81,73,0.1);  border-color: rgba(248,81,73,0.25); }
+    .icon-btn.active-pin   { color: var(--gold); background: rgba(240,165,0,0.12); border-color: rgba(240,165,0,0.3); }
+    .icon-btn.remove:hover { color: var(--red);  background: rgba(248,81,73,0.1);  border-color: rgba(248,81,73,0.25); }
 
     /* ── Empty state ── */
     .empty-state {
@@ -556,7 +551,6 @@
     </div>
     <p class="add-hint">
       Paste a Steam profile URL or SteamID64 to auto-fetch name &amp; avatar.
-      ⭐ marks a player as a <strong>default</strong> — they load automatically every session.
       <button class="how-link" onclick="openModal()">How does it work?</button>
     </p>
   </div>
@@ -580,9 +574,7 @@
 
   <div class="bottom-bar">
     <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Default (always loads)</span>
-      <span class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span>Pinned (guaranteed next)</span>
-      <span class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Last game</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span>Pinned (guaranteed next game)</span>
     </div>
     <button class="btn-next" id="nextBtn" onclick="generateNextGame()">▶ Next Game</button>
   </div>
@@ -618,9 +610,7 @@
     <section>
       <h4>Buttons on each player</h4>
       <ul>
-        <li><span class="mi">⭐</span><span><strong>Default</strong> — saves this player permanently. They're auto-added every time you open the app or reset the session.</span></li>
         <li><span class="mi">📌</span><span><strong>Pin</strong> — guarantees this player a slot in the very next game. The pin is consumed after one use.</span></li>
-        <li><span class="mi">🚩</span><span><strong>Last game</strong> — marks a player who's leaving soon. Auto-pins them so they get one final game before they go.</span></li>
         <li><span class="mi">✕</span><span><strong>Remove</strong> — takes the player out of the current session.</span></li>
       </ul>
     </section>
@@ -650,74 +640,16 @@
 
   let state = loadState();
 
-  // On fresh open with no players but saved defaults, restore them
-  if (state.players.length === 0 && state.defaults.length > 0) {
-    spawnDefaults();
-  }
-
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const s = JSON.parse(raw);
-        if (!s.defaults) s.defaults = [];
-        return s;
-      }
+      if (raw) return JSON.parse(raw);
     } catch (_) {}
-    return { players: [], defaults: [], gameNumber: 0, nextId: 1 };
+    return { players: [], gameNumber: 0, nextId: 1 };
   }
 
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }
-
-  // ── Defaults ──────────────────────────────────────────────────────────────
-
-  function spawnDefaults() {
-    state.defaults.forEach(d => {
-      const already = state.players.find(p =>
-        (d.steamId64 && p.steamId64 === d.steamId64) ||
-        p.name.toLowerCase() === d.name.toLowerCase()
-      );
-      if (!already) {
-        state.players.push({
-          id: state.nextId++,
-          name: d.name,
-          avatarUrl:  d.avatarUrl  || null,
-          steamId64:  d.steamId64  || null,
-          status:     'waiting',
-          pinned:     false,
-          lastGame:   false,
-          waitRounds: 0,
-          isDefault:  true
-        });
-      }
-    });
-  }
-
-  function toggleDefault(id) {
-    const p = state.players.find(p => p.id === id);
-    if (!p) return;
-    p.isDefault = !p.isDefault;
-
-    if (p.isDefault) {
-      if (!state.defaults.find(d =>
-        (p.steamId64 && d.steamId64 === p.steamId64) ||
-        d.name.toLowerCase() === p.name.toLowerCase()
-      )) {
-        state.defaults.push({ name: p.name, avatarUrl: p.avatarUrl, steamId64: p.steamId64 });
-      }
-      showToast(`⭐ ${p.name} saved as default`);
-    } else {
-      state.defaults = state.defaults.filter(d =>
-        !(d.name.toLowerCase() === p.name.toLowerCase() ||
-          (p.steamId64 && d.steamId64 === p.steamId64))
-      );
-      showToast(`${p.name} removed from defaults`);
-    }
-
-    saveState();
-    render();
   }
 
   // ── Steam lookup ──────────────────────────────────────────────────────────
@@ -816,9 +748,7 @@
       steamId64:  steamId64  || null,
       status:     'waiting',
       pinned:     false,
-      lastGame:   false,
-      waitRounds: 0,
-      isDefault:  false
+      waitRounds: 0
     });
 
     saveState();
@@ -839,13 +769,6 @@
   // ── Player actions ────────────────────────────────────────────────────────
 
   function removePlayer(id) {
-    const p = state.players.find(p => p.id === id);
-    if (p && p.isDefault) {
-      state.defaults = state.defaults.filter(d =>
-        !(d.name.toLowerCase() === p.name.toLowerCase() ||
-          (p.steamId64 && d.steamId64 === p.steamId64))
-      );
-    }
     state.players = state.players.filter(p => p.id !== id);
     saveState();
     render();
@@ -855,19 +778,6 @@
     const p = state.players.find(p => p.id === id);
     if (!p) return;
     p.pinned = !p.pinned;
-    if (!p.pinned) p.lastGame = false;
-    saveState();
-    render();
-  }
-
-  function toggleLastGame(id) {
-    const p = state.players.find(p => p.id === id);
-    if (!p) return;
-    p.lastGame = !p.lastGame;
-    if (p.lastGame) {
-      p.pinned = true;
-      showToast(`${p.name} pinned for one last game`);
-    }
     saveState();
     render();
   }
@@ -918,7 +828,7 @@
   function resetSession() {
     if (!confirm('Reset session? All players stay but game history clears.')) return;
     state.players.forEach(p => {
-      p.status = 'waiting'; p.pinned = false; p.lastGame = false; p.waitRounds = 0;
+      p.status = 'waiting'; p.pinned = false; p.waitRounds = 0;
     });
     state.gameNumber = 0;
     saveState();
@@ -952,18 +862,13 @@
   }
 
   function playerCard(p, isWaiting, rank) {
-    const pinnedCls  = p.pinned    ? 'is-pinned' : '';
-    const lastCls    = p.lastGame  ? 'is-last'   : '';
-    const pinBtnCls  = p.pinned    ? 'icon-btn active-pin'     : 'icon-btn';
-    const lastBtnCls = p.lastGame  ? 'icon-btn active-last'    : 'icon-btn';
-    const defBtnCls  = p.isDefault ? 'icon-btn active-default' : 'icon-btn';
+    const pinnedCls = p.pinned ? 'is-pinned' : '';
+    const pinBtnCls = p.pinned ? 'icon-btn active-pin' : 'icon-btn';
 
     const badges = [
-      p.isDefault ? '<span class="badge badge-default">⭐ Default</span>' : '',
-      p.pinned    ? '<span class="badge badge-pin">📌 Pinned</span>'      : '',
-      p.lastGame  ? '<span class="badge badge-last">🚩 Last</span>'       : '',
+      p.pinned ? '<span class="badge badge-pin">📌 Pinned</span>' : '',
       isWaiting && p.waitRounds > 0
-        ? `<span class="wait-badge">${p.waitRounds}r waiting</span>`      : ''
+        ? `<span class="wait-badge">${p.waitRounds}r waiting</span>` : ''
     ].join('');
 
     const rankEl = isWaiting && rank
@@ -977,7 +882,7 @@
       : `<span class="avatar-fallback" style="background:${nameColor(p.name)}">${escHtml(p.name[0])}</span>`;
 
     return `
-      <div class="player-card ${pinnedCls} ${lastCls}">
+      <div class="player-card ${pinnedCls}">
         ${rankEl}
         ${avatarEl}
         <div class="player-info">
@@ -985,12 +890,8 @@
           <div class="player-sub">${badges}</div>
         </div>
         <div class="card-actions">
-          <button class="${defBtnCls}" data-tip="${p.isDefault ? 'Remove from defaults' : 'Save as default'}"
-            onclick="toggleDefault(${p.id})" aria-label="Toggle default">⭐</button>
           <button class="${pinBtnCls}" data-tip="${p.pinned ? 'Unpin' : 'Pin for next game'}"
             onclick="togglePin(${p.id})" aria-label="Toggle pin">📌</button>
-          <button class="${lastBtnCls}" data-tip="${p.lastGame ? 'Remove last-game mark' : 'Mark as last game'}"
-            onclick="toggleLastGame(${p.id})" aria-label="Toggle last game">🚩</button>
           <button class="icon-btn remove" data-tip="Remove player"
             onclick="removePlayer(${p.id})" aria-label="Remove">✕</button>
         </div>
