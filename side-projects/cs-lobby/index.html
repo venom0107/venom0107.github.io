@@ -1038,7 +1038,7 @@
     const cardCls = p.status === 'confirmed' ? 'is-confirmed' : p.status === 'bench' ? 'is-bench' : '';
 
     const waitLabel = !isPlaying && p.waitRounds > 0
-      ? `<span style="font-size:0.68rem;color:var(--muted)">${p.waitRounds}r</span>` : '';
+      ? `<span style="font-size:0.68rem;color:var(--muted)">waited ${p.waitRounds} ${p.waitRounds === 1 ? 'game' : 'games'}</span>` : '';
 
     const avatarEl = p.avatarUrl
       ? `<img class="avatar" src="${escHtml(p.avatarUrl)}"
