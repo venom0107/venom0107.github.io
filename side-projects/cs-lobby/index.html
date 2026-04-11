@@ -20,7 +20,6 @@
       --green:    #3fb950;
       --blue:     #58a6ff;
       --red:      #f85149;
-      --orange:   #ff7b29;
       --radius:   10px;
     }
 
@@ -239,7 +238,7 @@
       from { opacity: 0; transform: translateY(-5px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .player-card.is-pinned { border-color: rgba(240,165,0,0.5);  background: rgba(240,165,0,0.05); }
+    .player-card.is-confirmed { border-color: rgba(240,165,0,0.45); background: rgba(240,165,0,0.04); }
 
     /* ── Avatar ── */
     .avatar {
@@ -291,22 +290,6 @@
       flex-wrap: wrap;
     }
 
-    .badge {
-      font-size: 0.62rem;
-      font-weight: 700;
-      padding: 1px 5px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-    .badge-pin  { background: rgba(240,165,0,0.2);  color: var(--gold); border: 1px solid rgba(240,165,0,0.4); }
-
-    .wait-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--blue);
-    }
-
     .player-rank {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.7rem;
@@ -316,8 +299,34 @@
       flex-shrink: 0;
     }
 
-    /* icon action buttons */
-    .card-actions { display: flex; gap: 3px; flex-shrink: 0; }
+    /* ── Status toggle ── */
+    .card-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+    .status-toggle {
+      display: flex;
+      border-radius: 7px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .status-btn {
+      padding: 4px 9px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      background: transparent;
+      color: var(--muted);
+      transition: background 0.12s, color 0.12s;
+      border-right: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .status-btn:last-child { border-right: none; }
+    .status-btn:hover:not(.active) { background: var(--surface2); color: var(--text); }
+    .status-btn.active-confirmed { background: rgba(240,165,0,0.15); color: var(--gold); }
+    .status-btn.active-queue     { background: rgba(88,166,255,0.12); color: var(--blue); }
+    .status-btn.active-bench     { background: rgba(139,148,158,0.12); color: var(--muted); }
 
     .icon-btn {
       width: 27px;
@@ -334,8 +343,7 @@
       flex-shrink: 0;
     }
     .icon-btn:hover { background: var(--border); color: var(--text); border-color: var(--border); }
-    .icon-btn.active-pin   { color: var(--gold); background: rgba(240,165,0,0.12); border-color: rgba(240,165,0,0.3); }
-    .icon-btn.remove:hover { color: var(--red);  background: rgba(248,81,73,0.1);  border-color: rgba(248,81,73,0.25); }
+    .icon-btn.remove:hover { color: var(--red); background: rgba(248,81,73,0.1); border-color: rgba(248,81,73,0.25); }
 
     /* ── Empty state ── */
     .empty-state {
@@ -565,7 +573,7 @@
     </div>
     <div class="panel">
       <div class="panel-header">
-        <h2>Waiting</h2>
+        <h2>Players</h2>
         <span class="slot-count waiting" id="waitingCount">0</span>
       </div>
       <div class="player-list" id="waitingList"></div>
@@ -574,7 +582,9 @@
 
   <div class="bottom-bar">
     <div class="legend">
-      <span class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span>Pinned (guaranteed next game)</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span>Confirmed — guaranteed next game</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Queue — in rotation</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--muted)"></span>Bench — sitting out</span>
     </div>
     <button class="btn-next" id="nextBtn" onclick="generateNextGame()">▶ Next Game</button>
   </div>
@@ -595,23 +605,25 @@
       <h4>Next Game priority order</h4>
       <div class="priority-row">
         <span class="priority-num" style="background:rgba(240,165,0,0.2);color:var(--gold)">1</span>
-        <div><strong>📌 Pinned players</strong> — always get a slot, regardless of whether they just played or have been waiting.</div>
+        <div><strong style="color:var(--gold)">Confirmed</strong> — always get a slot, regardless of how long others have waited.</div>
       </div>
       <div class="priority-row">
         <span class="priority-num" style="background:rgba(88,166,255,0.12);color:var(--blue)">2</span>
-        <div><strong>Waiting players</strong> — anyone sitting out fills remaining slots. Longer wait = higher priority within this group.</div>
+        <div><strong style="color:var(--blue)">Queue</strong> — fills remaining slots. Longer wait = higher priority. Players from the previous game are picked randomly if slots are still open.</div>
       </div>
       <div class="priority-row">
-        <span class="priority-num" style="background:rgba(63,185,80,0.12);color:var(--green)">3</span>
-        <div><strong>Just played</strong> — players from the previous game fill any leftover slots, picked randomly.</div>
+        <span class="priority-num" style="background:rgba(139,148,158,0.12);color:var(--muted)">—</span>
+        <div><strong style="color:var(--muted)">Bench</strong> — completely skipped during selection.</div>
       </div>
     </section>
 
     <section>
-      <h4>Buttons on each player</h4>
+      <h4>Player status</h4>
       <ul>
-        <li><span class="mi">📌</span><span><strong>Pin</strong> — guarantees this player a slot in the very next game. The pin is consumed after one use.</span></li>
-        <li><span class="mi">✕</span><span><strong>Remove</strong> — takes the player out of the current session.</span></li>
+        <li><span class="mi" style="color:var(--gold)">●</span><span><strong>Confirmed</strong> — locks this player into the next game. Resets to Queue after one game.</span></li>
+        <li><span class="mi" style="color:var(--blue)">●</span><span><strong>Queue</strong> — in the rotation. Selected by wait order when slots are available.</span></li>
+        <li><span class="mi" style="color:var(--muted)">●</span><span><strong>Bench</strong> — sitting out. Won't be picked until moved back to Queue.</span></li>
+        <li><span class="mi">✕</span><span><strong>Remove</strong> — removes the player entirely.</span></li>
       </ul>
     </section>
 
@@ -626,7 +638,7 @@
     <section>
       <h4>Reset session</h4>
       <ul>
-        <li><span class="mi">🔄</span><span>Keeps all players in the pool but clears the game counter and resets everyone's status back to <em>Waiting</em>.</span></li>
+        <li><span class="mi">🔄</span><span>Keeps all players but clears the game counter and resets everyone back to <em>Queue</em>.</span></li>
       </ul>
     </section>
   </div>
@@ -643,7 +655,16 @@
   function loadState() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const s = JSON.parse(raw);
+        // Migrate old schema: waiting→queue, playing stays, pinned→confirmed
+        s.players?.forEach(p => {
+          if (p.status === 'waiting') p.status = 'queue';
+          if (p.pinned) { p.status = 'confirmed'; delete p.pinned; }
+          if (!['playing','confirmed','queue','bench'].includes(p.status)) p.status = 'queue';
+        });
+        return s;
+      }
     } catch (_) {}
     return { players: [], gameNumber: 0, nextId: 1 };
   }
@@ -746,8 +767,7 @@
       name,
       avatarUrl:  avatarUrl  || null,
       steamId64:  steamId64  || null,
-      status:     'waiting',
-      pinned:     false,
+      status:     'queue',
       waitRounds: 0
     });
 
@@ -774,10 +794,10 @@
     render();
   }
 
-  function togglePin(id) {
+  function setStatus(id, status) {
     const p = state.players.find(p => p.id === id);
-    if (!p) return;
-    p.pinned = !p.pinned;
+    if (!p || p.status === 'playing') return;
+    p.status = status;
     saveState();
     render();
   }
@@ -789,38 +809,43 @@
 
     const shuffle = arr => arr.sort(() => Math.random() - 0.5);
 
-    const pinned     = state.players.filter(p => p.pinned);
-    const waiting    = shuffle(state.players.filter(p => !p.pinned && p.status === 'waiting'))
+    const confirmed  = state.players.filter(p => p.status === 'confirmed');
+    const inQueue    = shuffle(state.players.filter(p => p.status === 'queue'))
                          .sort((a, b) => b.waitRounds - a.waitRounds);
-    const justPlayed = shuffle(state.players.filter(p => !p.pinned && p.status === 'playing'));
+    const justPlayed = shuffle(state.players.filter(p => p.status === 'playing'));
+    // bench players are excluded entirely
 
-    if (pinned.length > LOBBY_SIZE) {
-      showToast(`⚠ ${pinned.length} pinned but only ${LOBBY_SIZE} slots — taking first ${LOBBY_SIZE}`);
+    if (confirmed.length > LOBBY_SIZE) {
+      showToast(`⚠ ${confirmed.length} confirmed but only ${LOBBY_SIZE} slots`);
     }
 
     const nextIds = new Set();
-    for (const p of pinned)     { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
-    for (const p of waiting)    { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
-    for (const p of justPlayed) { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
+    for (const p of confirmed)   { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
+    for (const p of inQueue)     { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
+    for (const p of justPlayed)  { if (nextIds.size < LOBBY_SIZE) nextIds.add(p.id); }
 
     state.players.forEach(p => {
       if (nextIds.has(p.id)) {
-        p.status = 'playing'; p.waitRounds = 0; p.pinned = false;
-      } else {
-        if (p.status === 'playing') { p.status = 'waiting'; p.waitRounds = 0; }
-        else { p.waitRounds++; }
-        p.pinned = false;
+        p.status = 'playing'; p.waitRounds = 0;
+      } else if (p.status === 'playing') {
+        p.status = 'queue'; p.waitRounds = 0;
+      } else if (p.status === 'confirmed') {
+        // confirmed but didn't fit (>5 confirmed) — stay confirmed
+        p.waitRounds++;
+      } else if (p.status === 'queue') {
+        p.waitRounds++;
       }
+      // bench stays bench
     });
 
     state.gameNumber++;
     saveState();
     render();
 
-    const inGame = state.players.filter(p => p.status === 'playing').length;
-    const bench  = state.players.length - inGame;
-    showToast(bench > 0
-      ? `Game ${state.gameNumber} — ${inGame} playing, ${bench} waiting`
+    const inGame   = state.players.filter(p => p.status === 'playing').length;
+    const queueLen = state.players.filter(p => p.status === 'queue').length;
+    showToast(queueLen > 0
+      ? `Game ${state.gameNumber} — ${inGame} playing, ${queueLen} in queue`
       : `Game ${state.gameNumber} — everyone's in!`
     );
   }
@@ -828,7 +853,7 @@
   function resetSession() {
     if (!confirm('Reset session? All players stay but game history clears.')) return;
     state.players.forEach(p => {
-      p.status = 'waiting'; p.pinned = false; p.waitRounds = 0;
+      p.status = 'queue'; p.waitRounds = 0;
     });
     state.gameNumber = 0;
     saveState();
@@ -840,40 +865,35 @@
 
   function render() {
     const playing = state.players.filter(p => p.status === 'playing');
-    const waiting = state.players
-      .filter(p => p.status === 'waiting')
-      .sort((a, b) => b.waitRounds - a.waitRounds);
+    // Players panel: confirmed first, then queue by waitRounds, then bench
+    const notPlaying = [
+      ...state.players.filter(p => p.status === 'confirmed'),
+      ...state.players.filter(p => p.status === 'queue').sort((a, b) => b.waitRounds - a.waitRounds),
+      ...state.players.filter(p => p.status === 'bench')
+    ];
 
     document.getElementById('gameNum').textContent      = state.gameNumber;
     document.getElementById('inGameCount').textContent  = `${playing.length} / ${LOBBY_SIZE}`;
-    document.getElementById('waitingCount').textContent = waiting.length;
+    document.getElementById('waitingCount').textContent = notPlaying.length;
 
     document.getElementById('inGameList').innerHTML = playing.length
-      ? playing.map(p => playerCard(p, false, 0)).join('')
+      ? playing.map(p => playerCard(p)).join('')
       : emptyState('👾', 'No one in game yet', 'Hit ▶ Next Game to fill the lobby');
 
-    document.getElementById('waitingList').innerHTML = waiting.length
-      ? waiting.map((p, i) => playerCard(p, true, i + 1)).join('')
-      : emptyState('✅', 'Queue is empty', state.players.length === 0
-          ? 'Add players above to get started'
-          : 'Everyone is playing!');
+    document.getElementById('waitingList').innerHTML = notPlaying.length
+      ? notPlaying.map(p => playerCard(p)).join('')
+      : emptyState('✅', 'No players yet', 'Add players above to get started');
 
     document.getElementById('nextBtn').disabled = state.players.length === 0;
   }
 
-  function playerCard(p, isWaiting, rank) {
-    const pinnedCls = p.pinned ? 'is-pinned' : '';
-    const pinBtnCls = p.pinned ? 'icon-btn active-pin' : 'icon-btn';
+  function playerCard(p) {
+    const isPlaying = p.status === 'playing';
 
-    const badges = [
-      p.pinned ? '<span class="badge badge-pin">📌 Pinned</span>' : '',
-      isWaiting && p.waitRounds > 0
-        ? `<span class="wait-badge">${p.waitRounds}r waiting</span>` : ''
-    ].join('');
+    const cardCls = p.status === 'confirmed' ? 'is-confirmed' : '';
 
-    const rankEl = isWaiting && rank
-      ? `<span class="player-rank">#${rank}</span>`
-      : '';
+    const waitLabel = !isPlaying && p.waitRounds > 0
+      ? `<span style="font-size:0.68rem;color:var(--muted)">${p.waitRounds}r</span>` : '';
 
     const avatarEl = p.avatarUrl
       ? `<img class="avatar" src="${escHtml(p.avatarUrl)}"
@@ -881,17 +901,25 @@
          ><span class="avatar-fallback" style="display:none;background:${nameColor(p.name)}">${escHtml(p.name[0])}</span>`
       : `<span class="avatar-fallback" style="background:${nameColor(p.name)}">${escHtml(p.name[0])}</span>`;
 
+    const statusToggle = isPlaying ? '' : `
+      <div class="status-toggle">
+        <button class="status-btn ${p.status==='confirmed'?'active active-confirmed':''}"
+          onclick="setStatus(${p.id},'confirmed')" title="Confirmed — guaranteed next game">Confirmed</button>
+        <button class="status-btn ${p.status==='queue'?'active active-queue':''}"
+          onclick="setStatus(${p.id},'queue')" title="In rotation">Queue</button>
+        <button class="status-btn ${p.status==='bench'?'active active-bench':''}"
+          onclick="setStatus(${p.id},'bench')" title="Sitting out">Bench</button>
+      </div>`;
+
     return `
-      <div class="player-card ${pinnedCls}">
-        ${rankEl}
+      <div class="player-card ${cardCls}">
         ${avatarEl}
         <div class="player-info">
           <span class="player-name" title="${escHtml(p.name)}">${escHtml(p.name)}</span>
-          <div class="player-sub">${badges}</div>
+          <div class="player-sub">${waitLabel}</div>
         </div>
         <div class="card-actions">
-          <button class="${pinBtnCls}" data-tip="${p.pinned ? 'Unpin' : 'Pin for next game'}"
-            onclick="togglePin(${p.id})" aria-label="Toggle pin">📌</button>
+          ${statusToggle}
           <button class="icon-btn remove" data-tip="Remove player"
             onclick="removePlayer(${p.id})" aria-label="Remove">✕</button>
         </div>
