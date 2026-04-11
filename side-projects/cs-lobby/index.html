@@ -352,6 +352,7 @@
     }
     .icon-btn:hover { background: var(--border); color: var(--text); border-color: var(--border); }
     .icon-btn.remove:hover { color: var(--red); background: rgba(248,81,73,0.1); border-color: rgba(248,81,73,0.25); }
+    .icon-btn.move-back:hover { color: var(--accent); background: rgba(88,166,255,0.1); border-color: rgba(88,166,255,0.25); }
 
     /* ── Empty state ── */
     .empty-state {
@@ -920,6 +921,14 @@
     render();
   }
 
+  function moveToQueue(id) {
+    const p = state.players.find(p => p.id === id);
+    if (!p) return;
+    p.status = 'queue';
+    saveState();
+    render();
+  }
+
   function setStatus(id, status) {
     const p = state.players.find(p => p.id === id);
     if (!p || p.status === 'playing') return;
@@ -1056,8 +1065,12 @@
         </div>
         <div class="card-actions">
           ${statusToggle}
-          <button class="icon-btn remove" data-tip="Remove player"
-            onclick="removePlayer(${p.id})" aria-label="Remove">✕</button>
+          ${isPlaying
+            ? `<button class="icon-btn move-back" data-tip="Move back to players list"
+                onclick="moveToQueue(${p.id})" aria-label="Move back">↩</button>`
+            : `<button class="icon-btn remove" data-tip="Remove player"
+                onclick="removePlayer(${p.id})" aria-label="Remove">✕</button>`
+          }
         </div>
       </div>`;
   }
